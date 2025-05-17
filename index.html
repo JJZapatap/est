@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cuestionario de Probabilidad y Estad&iacute;stica</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f6fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      background: #2d98da;
+      color: white;
+      padding: 1rem;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      margin-top: 2rem;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 90%;
+    }
+    .question {
+      display: none;
+    }
+    .question.active {
+      display: block;
+    }
+    button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #219150;
+    }
+    .result-table {
+      margin-top: 1rem;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .result-table th, .result-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    #timer {
+      margin: 1rem 0;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cuestionario: Probabilidad y Estad&iacute;stica - Grado 7&deg;</h1>
+  </header>
+  <div class="container">
+    <div id="start">
+      <label for="studentName">Nombre del estudiante:</label>
+      <input type="text" id="studentName" />
+      <br /><br />
+      <button onclick="startQuiz()">Iniciar Cuestionario</button>
+    </div>
+    <div id="quiz" style="display: none">
+      <div id="timer">Tiempo restante: 10:00</div>
+      <div id="questionContainer"></div>
+    </div>
+    <div id="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "&iquest;Cu&aacute;l es la probabilidad de que al lanzar dos dados la suma sea 7?",
+        options: ["1/6", "1/12", "1/9", "1/36"],
+        answer: "1/6"
+      },
+      {
+        question: "&iquest;Cu&aacute;l es la mediana del siguiente conjunto de datos: 3, 5, 7, 9, 11, 13, 15?",
+        options: ["7", "9", "11", "13"],
+        answer: "9"
+      },
+      {
+        question: "&iquest;Qu&eacute; representa la desviaci&oacute;n est&aacute;ndar en un conjunto de datos?",
+        options: ["La media de los datos", "La variabilidad de los datos", "El valor m&aacute;s frecuente", "El rango total"],
+        answer: "La variabilidad de los datos"
+      },
+      {
+        question: "En una urna hay 5 bolas rojas, 3 verdes y 2 azules. &iquest;Cu&aacute;l es la probabilidad de sacar una verde?",
+        options: ["1/2", "3/10", "3/5", "1/5"],
+        answer: "3/10"
+      },
+      {
+        question: "&iquest;Qu&eacute; tipo de gr&aacute;fico es m&aacute;s apropiado para mostrar la evoluci&oacute;n de una variable en el tiempo?",
+        options: ["Gr&aacute;fico de barras", "Gr&aacute;fico circular", "Histograma", "Gr&aacute;fico de l&iacute;neas"],
+        answer: "Gr&aacute;fico de l&iacute;neas"
+      },
+      {
+        question: "Si un evento tiene probabilidad 0.75, &iquest;cu&aacute;l es la probabilidad de que no ocurra?",
+        options: ["0.25", "0.75", "1", "0.5"],
+        answer: "0.25"
+      },
+      {
+        question: "&iquest;Cu&aacute;l es la moda del siguiente conjunto de datos: 4, 5, 6, 4, 4, 7, 8?",
+        options: ["4", "5", "6", "7"],
+        answer: "4"
+      },
+      {
+        question: "&iquest;Qu&eacute; representa un histograma?",
+        options: ["Porcentajes", "Frecuencia de intervalos de datos", "Datos acumulados", "Comparaci&oacute;n entre categor&iacute;as"],
+        answer: "Frecuencia de intervalos de datos"
+      },
+      {
+        question: "&iquest;Cu&aacute;l es el espacio muestral al lanzar una moneda y un dado?",
+        options: ["6", "8", "10", "12"],
+        answer: "12"
+      },
+      {
+        question: "Si un estudiante obtuvo las siguientes calificaciones: 3.5, 4.0, 4.5, 5.0, &iquest;cu&aacute;l es su promedio?",
+        options: ["4.0", "4.25", "4.5", "4.75"],
+        answer: "4.25"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let responses = [];
+    let timer;
+    let timeLeft = 600;
+
+    function startQuiz() {
+      const name = document.getElementById('studentName').value;
+      if (!name) return alert('Por favor ingrese su nombre');
+      document.getElementById('start').style.display = 'none';
+      document.getElementById('quiz').style.display = 'block';
+      showQuestion();
+      timer = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      document.getElementById('timer').innerText = `Tiempo restante: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        showResult();
+      }
+      timeLeft--;
+    }
+
+    function showQuestion() {
+      const q = questions[currentQuestion];
+      let html = `<div class="question active"><h3>Pregunta ${currentQuestion + 1}:</h3><p>${q.question}</p>`;
+      q.options.forEach(opt => {
+        html += `<p><input type='radio' name='option' value="${opt}"> ${opt}</p>`;
+      });
+      html += `<button onclick="nextQuestion()">Siguiente</button></div>`;
+      document.getElementById('questionContainer').innerHTML = html;
+    }
+
+    function nextQuestion() {
+      const selected = document.querySelector('input[name="option"]:checked');
+      if (!selected) return alert('Por favor seleccione una respuesta');
+      const answer = selected.value;
+      responses.push({ pregunta: questions[currentQuestion].question, correcta: questions[currentQuestion].answer, seleccionada: answer });
+      if (answer === questions[currentQuestion].answer) score++;
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        clearInterval(timer);
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById('quiz').style.display = 'none';
+      const name = document.getElementById('studentName').value;
+      let resultHTML = `<h3>Resultado de ${name}</h3>`;
+      resultHTML += `<p>Puntaje total: ${score} de ${questions.length}</p>`;
+      resultHTML += `<table class='result-table'><thead><tr><th>Pregunta</th><th>Respuesta Correcta</th><th>Tu Respuesta</th></tr></thead><tbody>`;
+      responses.forEach(r => {
+        resultHTML += `<tr><td>${r.pregunta}</td><td>${r.correcta}</td><td>${r.seleccionada}</td></tr>`;
+      });
+      resultHTML += `</tbody></table>`;
+      document.getElementById('result').innerHTML = resultHTML;
+      document.getElementById('result').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
+
+
